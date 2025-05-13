@@ -2,265 +2,333 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Phone & Space Game</title>
+  <title>Disobey the Phone</title>
   <style>
-    body { margin: 0; background-color: #111; color: white; font-family: Arial, sans-serif; }
-    h1 { text-align: center; font-family: Arial, sans-serif; }
-    canvas { display: block; margin: auto; background: #222; }
-    #gameMessage { text-align: center; margin-top: 10px; font-size: 20px; }
-    .pad { display: grid; grid-template-columns: repeat(3, 100px); grid-gap: 10px; justify-content: center; margin-top: 20px; }
-    .pad button { padding: 20px; font-size: 24px; background-color: #444; color: white; border: none; cursor: pointer; }
-    .pad button:hover { background-color: #666; }
-    #backToEarthButton { display: none; margin-top: 20px; padding: 10px 20px; background-color: #444; color: white; cursor: pointer; border: none; }
-    #moonExitButton { display: none; margin-top: 20px; padding: 10px 20px; background-color: #444; color: white; cursor: pointer; border: none; }
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #111;
+      color: #fff;
+      padding: 20px;
+    }
+    .btn, button {
+      background: #444;
+      color: white;
+      font-size: 20px;
+      padding: 15px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    .btn:hover, button:hover {
+      background: #666;
+    }
+    input[type="text"] {
+      padding: 10px;
+      font-size: 18px;
+      border-radius: 5px;
+      border: none;
+      width: 100px;
+      text-align: center;
+    }
+    #keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 80px);
+      gap: 10px;
+      justify-content: center;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
-  <h1>📱 Phone & Space Game</h1>
-  <div id="gameMessage">Get ready to play!</div>
-  <div id="pad" class="pad">
-    <button id="1" onclick="pressNumber(1)">1</button>
-    <button id="2" onclick="pressNumber(2)">2</button>
-    <button id="3" onclick="pressNumber(3)">3</button>
-    <button id="4" onclick="pressNumber(4)">4</button>
-    <button id="5" onclick="pressNumber(5)">5</button>
-    <button id="6" onclick="pressNumber(6)">6</button>
-    <button id="7" onclick="pressNumber(7)">7</button>
-    <button id="8" onclick="pressNumber(8)">8</button>
-    <button id="9" onclick="pressNumber(9)">9</button>
-    <button id="0" onclick="pressNumber(0)">0</button>
-  </div>
-  <canvas id="gameCanvas" width="800" height="500"></canvas>
-  <button id="backToEarthButton" onclick="goBackToEarth()">Go Back to Earth</button>
-  <button id="moonExitButton" onclick="moonExit()">Exit Ship (Moon)</button>
 
-  <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-    const gameMessage = document.getElementById("gameMessage");
-    const backToEarthButton = document.getElementById("backToEarthButton");
-    const moonExitButton = document.getElementById("moonExitButton");
+<h1>Disobey the Phone</h1>
+<div id="instruction">Press Start to begin</div>
+<button onclick="startGame()">Start</button>
 
-    let gameStage = 0; // 0 - Phone Game, 1 - Zombie Game, 2 - Moon Game
-    let phoneNumbersPressed = 0;
-    let targetNumber;
-    let gameRunning = true;
+<div id="keypad" style="display:none;"></div>
+<div id="status"></div>
+<div id="sequence"></div>
 
-    // Phone Game Variables
-    let level = 1;
+<div id="nukeSection" style="display:none;">
+  <h2>You did it. Now tap the nuke to destroy the world.</h2>
+  <button onclick="explodeWorld()">💣 Tap the Nuke</button>
+</div>
 
-    // Start Phone Game
-    function startPhoneGame() {
-      gameStage = 0;
-      phoneNumbersPressed = 0;
-      targetNumber = Math.floor(Math.random() * 10);
-      gameMessage.textContent = "Phone Game: Press the number you see!";
-      phoneGameLoop();
-    }
+<div id="phoneSection" style="display:none;">
+  <h2>You found a phone.</h2>
+  <p>Enter the 5-digit password:</p>
+  <input id="passwordInput" maxlength="5">
+  <button onclick="checkPassword()">Enter</button>
+  <p id="passwordResult"></p>
+</div>
 
-    // Handle phone number button press
-    function pressNumber(num) {
-      if (gameRunning) {
-        if (num === targetNumber) {
-          phoneNumbersPressed++;
-        } else {
-          gameMessage.textContent = "Wrong number! Game over!";
-          gameRunning = false;
-          setTimeout(startPhoneGame, 2000);
-        }
-      }
-    }
+<div id="virusSection" style="display:none;">
+  <h2>⚠️ VIRUS DETECTED!</h2>
+  <p>Emergency override required.</p>
+  <input id="overrideInput" maxlength="4">
+  <button onclick="checkOverride()">Override</button>
+  <p id="overrideResult"></p>
+  <p id="timer">Time Left: 15</p>
+</div>
 
-    // Phone Game Loop
-    function phoneGameLoop() {
-      if (phoneNumbersPressed >= 15) {
-        gameMessage.textContent = "You won the phone game! Moving to the Moon!";
-        setTimeout(startMoonGame, 2000);
-        return;
-      }
+<div id="spaceshipSection" style="display:none;">
+  <h2>Spaceship Preparation</h2>
+  <button onclick="fuelShip()">Fuel Ship</button>
+  <button onclick="installParts()">Install Parts</button>
+  <p id="shipStatus"></p>
+  <button id="launchBtn" onclick="goToMoon()" style="display:none;">🚀 Launch to Moon</button>
+</div>
 
-      targetNumber = Math.floor(Math.random() * 10);
-      gameMessage.textContent = `Press ${targetNumber}... (Level ${level})`;
-    }
+<div id="moonShipSection" style="display:none;">
+  <h2>🌕 You're on the Moon</h2>
+  <p>Enter code to exit the ship:</p>
+  <input id="moonShipCode" maxlength="4">
+  <button onclick="unlockMoon()">Unlock Ship</button>
+  <p id="moonUnlockStatus"></p>
+</div>
 
-    // Moon Game Variables
-    let onMoon = false;
+<div id="moonLaptopSection" style="display:none;">
+  <h2>🔐 Futuristic Laptop</h2>
+  <p>Enter password to log in:</p>
+  <input id="laptopCode" maxlength="4">
+  <button onclick="unlockLaptop()">Login</button>
+  <p id="laptopStatus"></p>
+</div>
 
-    // Start Moon Game
-    function startMoonGame() {
-      gameStage = 2;
-      gameMessage.textContent = "Moon: Fuel the ship and take off!";
-      backToEarthButton.style.display = "none";
-      moonExitButton.style.display = "block";
-    }
+<div id="laptopScreen" style="display:none;">
+  <h2>💻 MoonTube OS</h2>
+  <button onclick="openYoutube()">📺 YouTube App</button>
+</div>
 
-    // Exit the ship on the Moon
-    function moonExit() {
-      gameMessage.textContent = "Moon exit successful! You’re now on Earth.";
-      backToEarthButton.style.display = "block";
-      moonExitButton.style.display = "none";
-    }
+<div id="youtubeApp" style="display:none;">
+  <h2>📡 Live-Streaming Studio</h2>
+  <button onclick="startLive()">Start Live-Screen</button>
+  <p id="viewCount">Views: 0</p>
+  <div id="playButtons"></div>
+</div>
 
-    // Go back to Earth (Zombie game)
-    function goBackToEarth() {
-      gameStage = 1;
-      onMoon = false;
-      backToEarthButton.style.display = "none";
-      gameMessage.textContent = "Zombie Apocalypse: Survive!";
-      startZombieGame();
-    }
+<div id="repairSection" style="display:none;">
+  <h2>🔧 Repair Ship</h2>
+  <p>Use a Play Button to fix your spaceship.</p>
+  <button onclick="fixShip()">Use Play Button</button>
+  <p id="repairStatus"></p>
+</div>
 
-    // Zombie Game Variables
-    const player = {
-      x: 100,
-      y: canvas.height / 2,
-      width: 30,
-      height: 30,
-      speed: 5,
-      health: 100,
-      bullets: [],
-      gunAngle: 0,
-      gunLength: 30,
-    };
+<script>
+  let level = 1, correctAvoids = 0, toldNumber, inPuzzle = false;
+  let puzzleSequence = [], puzzleIndex = 0;
+  let viewCount = 0, viewInterval;
+  let overrideTimer, timeLeft = 15;
+  let fuelFilled = false, partsInstalled = false;
+  let earnedButtons = [];
 
-    let zombies = [];
-    let zombieCount = 0;
-    let zombieSpawnRate = 1000;
-    let zombieHealthIncreaseInterval = 10000;
+  function startGame() {
+    document.getElementById("keypad").style.display = "grid";
+    document.getElementById("instruction").textContent = "";
+    document.getElementById("status").textContent = "";
+    createKeypad();
+    nextAvoidInstruction();
+  }
 
-    // Start Zombie Game
-    function startZombieGame() {
-      setInterval(spawnZombie, zombieSpawnRate);
-      setInterval(increaseZombieHealth, zombieHealthIncreaseInterval);
-      gameLoop();
-    }
-
-    // Spawn a new zombie
-    function spawnZombie() {
-      const edge = Math.floor(Math.random() * 4);
-      let x = edge === 0 ? canvas.width : edge === 1 ? 0 : Math.random() * canvas.width;
-      let y = edge === 2 ? 0 : edge === 3 ? canvas.height : Math.random() * canvas.height;
-      zombies.push({ x, y, size: 20, health: 3 });
-    }
-
-    // Increase zombie health over time
-    function increaseZombieHealth() {
-      zombies.forEach(z => {
-        if (z.health < 10) z.health += 1;
-      });
-    }
-
-    // Player shooting logic
-    function shootBullet() {
-      const angle = player.gunAngle;
-      const speed = 10;
-      const bullet = {
-        x: player.x + Math.cos(angle) * player.gunLength,
-        y: player.y + Math.sin(angle) * player.gunLength,
-        dx: Math.cos(angle) * speed,
-        dy: Math.sin(angle) * speed,
-      };
-      player.bullets.push(bullet);
-    }
-
-    // Move player using arrow keys
-    function movePlayer() {
-      if (keys["ArrowUp"] && player.y > 0) player.y -= player.speed;
-      if (keys["ArrowDown"] && player.y < canvas.height - player.height) player.y += player.speed;
-      if (keys["ArrowLeft"] && player.x > 0) player.x -= player.speed;
-      if (keys["ArrowRight"] && player.x < canvas.width - player.width) player.x += player.speed;
-    }
-
-    // Update zombies and check for collisions
-    function updateZombies() {
-      zombies.forEach(z => {
-        const dx = player.x - z.x;
-        const dy = player.y - z.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const speed = 1;
-
-        if (dist > 10) {
-          z.x += dx / dist * speed;
-          z.y += dy / dist * speed;
-        } else {
-          player.health -= 1;
-        }
-
-        player.bullets.forEach((bullet, i) => {
-          const bulletDist = Math.sqrt(Math.pow(bullet.x - z.x, 2) + Math.pow(bullet.y - z.y, 2));
-          if (bulletDist < z.size) {
-            z.health -= 1;
-            player.bullets.splice(i, 1);
-          }
-        });
-
-        if (z.health <= 0) {
-          zombies.splice(zombies.indexOf(z), 1);
-          zombieCount += 1;
-        }
-      });
-    }
-
-    // Draw game objects
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Draw player
-      ctx.fillStyle = "white";
-      ctx.fillRect(player.x - player.width / 2, player.y - player.height / 2, player.width, player.height);
-
-      // Draw gun
-      ctx.strokeStyle = "white";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(player.x, player.y);
-      ctx.lineTo(player.x + Math.cos(player.gunAngle) * player.gunLength, player.y + Math.sin(player.gunAngle) * player.gunLength);
-      ctx.stroke();
-
-      // Draw bullets
-      ctx.fillStyle = "yellow";
-      player.bullets.forEach(b => {
-        ctx.beginPath();
-        ctx.arc(b.x, b.y, 5, 0, Math.PI * 2);
-        ctx.fill();
-      });
-
-      // Draw zombies
-      ctx.fillStyle = "green";
-      zombies.forEach(z => {
-        ctx.beginPath();
-        ctx.arc(z.x, z.y, z.size, 0, Math.PI * 2);
-        ctx.fill();
-      });
-
-      // Check for player death
-      if (player.health <= 0) {
-        gameRunning = false;
-        gameMessage.textContent = "You were overrun by zombies! Game Over!";
-      }
-    }
-
-    // Game loop
-    function gameLoop() {
-      if (gameRunning) {
-        movePlayer();
-        updateZombies();
-        draw();
-        requestAnimationFrame(gameLoop);
-      }
-    }
-
-    // Handle key presses
-    let keys = {};
-    document.addEventListener("keydown", (e) => keys[e.key] = true);
-    document.addEventListener("keyup", (e) => keys[e.key] = false);
-    document.addEventListener("keydown", (e) => {
-      if (e.key === " " && gameRunning) shootBullet();
+  function createKeypad() {
+    const keypad = document.getElementById("keypad");
+    keypad.innerHTML = "";
+    [1,2,3,4,5,6,7,8,9,0].forEach(n => {
+      const btn = document.createElement("button");
+      btn.textContent = n;
+      btn.className = "btn";
+      btn.onclick = () => handlePress(n);
+      keypad.appendChild(btn);
     });
+  }
 
-    // Initialize the game
-    startPhoneGame();
-  </script>
+  function nextAvoidInstruction() {
+    toldNumber = Math.floor(Math.random() * 10);
+    document.getElementById("instruction").textContent = `Press ${toldNumber}`;
+    document.getElementById("status").textContent = `Progress: ${correctAvoids}/15`;
+  }
+
+  function handlePress(n) {
+    if (inPuzzle) {
+      if (n === puzzleSequence[puzzleIndex]) {
+        puzzleIndex++;
+        if (puzzleIndex === puzzleSequence.length) {
+          level++;
+          if (level > 4) winGame();
+          else {
+            correctAvoids = 0;
+            inPuzzle = false;
+            nextAvoidInstruction();
+          }
+        }
+      } else {
+        puzzleIndex = 0;
+        startPuzzle();
+      }
+    } else {
+      if (n === toldNumber) {
+        correctAvoids = 0;
+        document.getElementById("status").textContent = `Reset! Progress: ${correctAvoids}/15`;
+      } else {
+        correctAvoids++;
+        if (correctAvoids >= 15) startPuzzle();
+        else nextAvoidInstruction();
+      }
+    }
+  }
+
+  function startPuzzle() {
+    inPuzzle = true;
+    puzzleSequence = [];
+    puzzleIndex = 0;
+    for (let i = 0; i < level + 4; i++) {
+      puzzleSequence.push(Math.floor(Math.random() * 10));
+    }
+    document.getElementById("instruction").textContent = `Repeat: ${puzzleSequence.join(" ")}`;
+  }
+
+  function winGame() {
+    document.getElementById("keypad").style.display = "none";
+    document.getElementById("instruction").textContent = "Complete!";
+    document.getElementById("nukeSection").style.display = "block";
+  }
+
+  function explodeWorld() {
+    document.getElementById("nukeSection").innerHTML = "<h2>💥 BOOM!</h2><p>The world is gone...</p>";
+    setTimeout(() => {
+      document.getElementById("phoneSection").style.display = "block";
+    }, 1500);
+  }
+
+  function checkPassword() {
+    const input = document.getElementById("passwordInput").value;
+    if (input === "12345") {
+      document.getElementById("passwordResult").textContent = "Password accepted.";
+      setTimeout(triggerVirus, 1000);
+    } else {
+      document.getElementById("passwordResult").textContent = "Wrong password.";
+    }
+  }
+
+  function triggerVirus() {
+    document.getElementById("phoneSection").style.display = "none";
+    document.getElementById("virusSection").style.display = "block";
+    timeLeft = 15;
+    updateTimer();
+    overrideTimer = setInterval(() => {
+      timeLeft--;
+      updateTimer();
+      if (timeLeft <= 0) {
+        clearInterval(overrideTimer);
+        document.getElementById("overrideResult").textContent = "💥 The phone exploded.";
+      }
+    }, 1000);
+  }
+
+  function updateTimer() {
+    document.getElementById("timer").textContent = `Time Left: ${timeLeft}`;
+  }
+
+  function checkOverride() {
+    const code = document.getElementById("overrideInput").value;
+    if (code === "1345") {
+      clearInterval(overrideTimer);
+      document.getElementById("overrideResult").textContent = "✅ Override successful!";
+      setTimeout(() => {
+        document.getElementById("virusSection").style.display = "none";
+        document.getElementById("spaceshipSection").style.display = "block";
+      }, 1000);
+    } else {
+      document.getElementById("overrideResult").textContent = "Incorrect code!";
+    }
+  }
+
+  function fuelShip() {
+    fuelFilled = true;
+    checkShip();
+  }
+
+  function installParts() {
+    partsInstalled = true;
+    checkShip();
+  }
+
+  function checkShip() {
+    if (fuelFilled && partsInstalled) {
+      document.getElementById("shipStatus").textContent = "Ready to launch!";
+      document.getElementById("launchBtn").style.display = "inline-block";
+    } else {
+      document.getElementById("shipStatus").textContent = "Preparing ship...";
+    }
+  }
+
+  function goToMoon() {
+    document.getElementById("spaceshipSection").style.display = "none";
+    document.getElementById("moonShipSection").style.display = "block";
+  }
+
+  function unlockMoon() {
+    const code = document.getElementById("moonShipCode").value;
+    if (code === "1954") {
+      document.getElementById("moonUnlockStatus").textContent = "Unlocked.";
+      setTimeout(() => {
+        document.getElementById("moonShipSection").style.display = "none";
+        document.getElementById("moonLaptopSection").style.display = "block";
+      }, 1000);
+    } else {
+      document.getElementById("moonUnlockStatus").textContent = "Incorrect.";
+    }
+  }
+
+  function unlockLaptop() {
+    const code = document.getElementById("laptopCode").value;
+    if (code === "1954") {
+      document.getElementById("laptopStatus").textContent = "Access granted.";
+      setTimeout(() => {
+        document.getElementById("moonLaptopSection").style.display = "none";
+        document.getElementById("laptopScreen").style.display = "block";
+      }, 1000);
+    } else {
+      document.getElementById("laptopStatus").textContent = "Wrong password.";
+    }
+  }
+
+  function openYoutube() {
+    document.getElementById("laptopScreen").style.display = "none";
+    document.getElementById("youtubeApp").style.display = "block";
+  }
+
+  function startLive() {
+    if (viewInterval) return;
+    viewInterval = setInterval(() => {
+      viewCount++;
+      document.getElementById("viewCount").textContent = "Views: " + viewCount;
+      if (viewCount === 100) createPlayButton("Bronze");
+      if (viewCount === 200) createPlayButton("Silver");
+      if (viewCount === 300) createPlayButton("Gold");
+      if (viewCount === 400) createPlayButton("Diamond");
+    }, 500);
+  }
+
+  function createPlayButton(type) {
+    if (earnedButtons.includes(type)) return;
+    earnedButtons.push(type);
+    const btn = document.createElement("button");
+    btn.textContent = `${type} Play Button`;
+    btn.className = "btn";
+    btn.onclick = () => {
+      document.getElementById("repairSection").style.display = "block";
+    };
+    document.getElementById("playButtons").appendChild(btn);
+  }
+
+  function fixShip() {
+    clearInterval(viewInterval);
+    document.getElementById("repairStatus").textContent = "✅ Ship fixed! To be continued...";
+  }
+</script>
+
 </body>
 </html>
