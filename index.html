@@ -1,266 +1,199 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Phone Number Game</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background: #111;
-      color: #fff;
-      padding: 20px;
-    }
-    #keypad {
-      display: grid;
-      grid-template-columns: repeat(3, 80px);
-      grid-gap: 10px;
-      justify-content: center;
-      margin-top: 20px;
-    }
-    .btn {
-      background: #444;
-      color: white;
-      font-size: 24px;
-      padding: 20px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-    }
-    .btn:hover {
-      background: #666;
-    }
-    #status, #sequence {
-      font-size: 18px;
-      margin-top: 15px;
-    }
-    #nukeButton, #phoneSection, #virusSection {
-      margin-top: 30px;
-    }
-    #nukeButton button, #submitPassword, #submitOverride {
-      font-size: 20px;
-      padding: 10px 20px;
-      margin-top: 10px;
-      background-color: red;
-      border: none;
-      color: white;
-      border-radius: 10px;
-      cursor: pointer;
-    }
-    input[type="text"] {
-      padding: 8px;
-      font-size: 18px;
-      width: 120px;
-      text-align: center;
-      border-radius: 5px;
-      border: none;
-    }
-    #timer {
-      font-size: 22px;
-      margin-top: 10px;
-      color: yellow;
-    }
-  </style>
-</head>
-<body>
-  <h1>Phone Number Game</h1>
-  <div id="instruction">Press Start to begin</div>
-  <button onclick="startGame()">Start</button>
+<!-- (Same as before, just updated the script part below) -->
+<!-- Replace the existing <script> tag at the bottom of your current code with this updated version: -->
 
-  <div id="keypad" style="display:none;"></div>
-  <div id="status"></div>
-  <div id="sequence"></div>
+<script>
+  const keypad = document.getElementById("keypad");
+  const instruction = document.getElementById("instruction");
+  const status = document.getElementById("status");
+  const sequenceDisplay = document.getElementById("sequence");
+  const nukeButton = document.getElementById("nukeButton");
+  const phoneSection = document.getElementById("phoneSection");
+  const passwordResult = document.getElementById("passwordResult");
+  const virusSection = document.getElementById("virusSection");
+  const timerDisplay = document.getElementById("timer");
+  const overrideResult = document.getElementById("overrideResult");
 
-  <div id="nukeButton" style="display:none;">
-    <h2>You did it. Now...</h2>
-    <p>Tap the nuke to destroy the world.</p>
-    <button onclick="explodeWorld()">💣 Tap the Nuke</button>
-  </div>
+  let level = 1;
+  let correctAvoids = 0;
+  let toldNumber = null;
+  let inPuzzle = false;
+  let puzzleSequence = [];
+  let puzzleIndex = 0;
+  let overrideTimer = null;
+  let timeLeft = 15;
 
-  <div id="phoneSection" style="display:none;">
-    <h2>You found a phone.</h2>
-    <p>Enter the 5-digit password:</p>
-    <input type="text" id="passwordInput" maxlength="5">
-    <br>
-    <button id="submitPassword" onclick="checkPassword()">Enter</button>
-    <p id="passwordResult"></p>
-  </div>
+  function startGame() {
+    level = 1;
+    correctAvoids = 0;
+    inPuzzle = false;
+    passwordResult.textContent = '';
+    overrideResult.textContent = '';
+    virusSection.style.display = 'none';
+    phoneSection.style.display = 'none';
+    document.getElementById("bankSection")?.remove(); // remove old bank section
+    createKeypad();
+    keypad.style.display = "grid";
+    nukeButton.style.display = "none";
+    sequenceDisplay.textContent = "";
+    nextAvoidInstruction();
+  }
 
-  <div id="virusSection" style="display:none;">
-    <h2>⚠️ VIRUS DETECTED!</h2>
-    <p>Enter emergency override code before explosion!</p>
-    <p style="color: red;">Code: 1345</p>
-    <input type="text" id="overrideInput" maxlength="4">
-    <br>
-    <button id="submitOverride" onclick="checkOverride()">Override</button>
-    <div id="timer">Time Left: 15</div>
-    <p id="overrideResult"></p>
-  </div>
+  function createKeypad() {
+    keypad.innerHTML = "";
+    const nums = [1,2,3,4,5,6,7,8,9,0];
+    nums.forEach(n => {
+      const btn = document.createElement("button");
+      btn.className = "btn";
+      btn.textContent = n;
+      btn.onclick = () => handlePress(n);
+      keypad.appendChild(btn);
+    });
+  }
 
-  <script>
-    const keypad = document.getElementById("keypad");
-    const instruction = document.getElementById("instruction");
-    const status = document.getElementById("status");
-    const sequenceDisplay = document.getElementById("sequence");
-    const nukeButton = document.getElementById("nukeButton");
-    const phoneSection = document.getElementById("phoneSection");
-    const passwordResult = document.getElementById("passwordResult");
-    const virusSection = document.getElementById("virusSection");
-    const timerDisplay = document.getElementById("timer");
-    const overrideResult = document.getElementById("overrideResult");
+  function nextAvoidInstruction() {
+    toldNumber = Math.floor(Math.random() * 10);
+    instruction.textContent = `Press ${toldNumber}`;
+    status.textContent = `Progress: ${correctAvoids}/15`;
+  }
 
-    let level = 1;
-    let correctAvoids = 0;
-    let toldNumber = null;
-    let inPuzzle = false;
-    let puzzleSequence = [];
-    let puzzleIndex = 0;
-    let overrideTimer = null;
-    let timeLeft = 15;
-
-    function startGame() {
-      level = 1;
-      correctAvoids = 0;
-      inPuzzle = false;
-      passwordResult.textContent = '';
-      overrideResult.textContent = '';
-      virusSection.style.display = 'none';
-      phoneSection.style.display = 'none';
-      createKeypad();
-      keypad.style.display = "grid";
-      nukeButton.style.display = "none";
-      sequenceDisplay.textContent = "";
-      nextAvoidInstruction();
-    }
-
-    function createKeypad() {
-      keypad.innerHTML = "";
-      const nums = [1,2,3,4,5,6,7,8,9,0];
-      nums.forEach(n => {
-        const btn = document.createElement("button");
-        btn.className = "btn";
-        btn.textContent = n;
-        btn.onclick = () => handlePress(n);
-        keypad.appendChild(btn);
-      });
-    }
-
-    function nextAvoidInstruction() {
-      toldNumber = Math.floor(Math.random() * 10);
-      instruction.textContent = `Press ${toldNumber}`;
-      status.textContent = `Progress: ${correctAvoids}/15`;
-    }
-
-    function handlePress(n) {
-      if (inPuzzle) {
-        if (n === puzzleSequence[puzzleIndex]) {
-          puzzleIndex++;
-          if (puzzleIndex === puzzleSequence.length) {
-            level++;
-            if (level > 4) {
-              winGame();
-            } else {
-              correctAvoids = 0;
-              inPuzzle = false;
-              sequenceDisplay.textContent = "";
-              nextAvoidInstruction();
-            }
+  function handlePress(n) {
+    if (inPuzzle) {
+      if (n === puzzleSequence[puzzleIndex]) {
+        puzzleIndex++;
+        if (puzzleIndex === puzzleSequence.length) {
+          level++;
+          if (level > 4) {
+            winGame();
+          } else {
+            correctAvoids = 0;
+            inPuzzle = false;
+            sequenceDisplay.textContent = "";
+            nextAvoidInstruction();
           }
-        } else {
-          instruction.textContent = "Wrong! Try the sequence again...";
-          setTimeout(() => {
-            startPuzzlePhase();
-          }, 1000);
         }
+      } else {
+        instruction.textContent = "Wrong! Try the sequence again...";
+        setTimeout(() => {
+          startPuzzlePhase();
+        }, 1000);
+      }
+      return;
+    }
+
+    if (n === toldNumber) {
+      correctAvoids = 0;
+      instruction.textContent = `Press ${toldNumber}`;
+      status.textContent = `Reset! Progress: ${correctAvoids}/15`;
+    } else {
+      correctAvoids++;
+      if (correctAvoids >= 15) {
+        startPuzzlePhase();
         return;
       }
-
-      if (n === toldNumber) {
-        correctAvoids = 0;
-        instruction.textContent = `Press ${toldNumber}`;
-        status.textContent = `Reset! Progress: ${correctAvoids}/15`;
-      } else {
-        correctAvoids++;
-        if (correctAvoids >= 15) {
-          startPuzzlePhase();
-          return;
-        }
-        nextAvoidInstruction();
-      }
+      nextAvoidInstruction();
     }
+  }
 
-    function startPuzzlePhase() {
-      inPuzzle = true;
-      puzzleSequence = [];
-      puzzleIndex = 0;
-      instruction.textContent = `Repeat this ${level + 4}-digit sequence`;
-      for (let i = 0; i < level + 4; i++) {
-        puzzleSequence.push(Math.floor(Math.random() * 10));
-      }
-      sequenceDisplay.textContent = "Sequence: " + puzzleSequence.join(" ");
+  function startPuzzlePhase() {
+    inPuzzle = true;
+    puzzleSequence = [];
+    puzzleIndex = 0;
+    instruction.textContent = `Repeat this ${level + 4}-digit sequence`;
+    for (let i = 0; i < level + 4; i++) {
+      puzzleSequence.push(Math.floor(Math.random() * 10));
     }
+    sequenceDisplay.textContent = "Sequence: " + puzzleSequence.join(" ");
+  }
 
-    function winGame() {
-      instruction.textContent = "You've passed all tests.";
-      keypad.style.display = "none";
-      sequenceDisplay.textContent = "";
-      status.textContent = "";
-      nukeButton.style.display = "block";
-    }
+  function winGame() {
+    instruction.textContent = "You've passed all tests.";
+    keypad.style.display = "none";
+    sequenceDisplay.textContent = "";
+    status.textContent = "";
+    nukeButton.style.display = "block";
+  }
 
-    function explodeWorld() {
-      nukeButton.innerHTML = "<h2>💥 BOOM!</h2><p>The world is gone...</p>";
+  function explodeWorld() {
+    nukeButton.innerHTML = "<h2>💥 BOOM!</h2><p>The world is gone...</p>";
+    setTimeout(() => {
+      phoneSection.style.display = "block";
+      instruction.textContent = "";
+    }, 2000);
+  }
+
+  function checkPassword() {
+    const input = document.getElementById("passwordInput").value;
+    if (input === "12345") {
+      passwordResult.style.color = "#0f0";
+      passwordResult.textContent = "Password accepted...";
       setTimeout(() => {
-        phoneSection.style.display = "block";
-        instruction.textContent = "";
-      }, 2000);
+        triggerVirus();
+      }, 1500);
+    } else {
+      passwordResult.style.color = "red";
+      passwordResult.textContent = "Wrong password.";
     }
+  }
 
-    function checkPassword() {
-      const input = document.getElementById("passwordInput").value;
-      if (input === "12345") {
-        passwordResult.style.color = "#0f0";
-        passwordResult.textContent = "Password accepted...";
-        setTimeout(() => {
-          triggerVirus();
-        }, 1500);
-      } else {
-        passwordResult.style.color = "red";
-        passwordResult.textContent = "Wrong password.";
-      }
-    }
-
-    function triggerVirus() {
-      phoneSection.style.display = "none";
-      virusSection.style.display = "block";
-      timeLeft = 15;
+  function triggerVirus() {
+    phoneSection.style.display = "none";
+    virusSection.style.display = "block";
+    timeLeft = 15;
+    updateTimer();
+    overrideTimer = setInterval(() => {
+      timeLeft--;
       updateTimer();
-      overrideTimer = setInterval(() => {
-        timeLeft--;
-        updateTimer();
-        if (timeLeft <= 0) {
-          clearInterval(overrideTimer);
-          overrideResult.style.color = "red";
-          overrideResult.textContent = "💥 Too late. The phone exploded.";
-        }
-      }, 1000);
-    }
-
-    function updateTimer() {
-      timerDisplay.textContent = `Time Left: ${timeLeft}`;
-    }
-
-    function checkOverride() {
-      const code = document.getElementById("overrideInput").value;
-      if (code === "1345") {
+      if (timeLeft <= 0) {
         clearInterval(overrideTimer);
-        overrideResult.style.color = "#0f0";
-        overrideResult.textContent = "✅ Override successful. You survived!";
-      } else {
         overrideResult.style.color = "red";
-        overrideResult.textContent = "Incorrect code!";
+        overrideResult.textContent = "💥 Too late. The phone exploded.";
       }
+    }, 1000);
+  }
+
+  function updateTimer() {
+    timerDisplay.textContent = `Time Left: ${timeLeft}`;
+  }
+
+  function checkOverride() {
+    const code = document.getElementById("overrideInput").value;
+    if (code === "1345") {
+      clearInterval(overrideTimer);
+      overrideResult.style.color = "#0f0";
+      overrideResult.textContent = "✅ Override successful. You survived!";
+      setTimeout(() => {
+        showBankHack();
+      }, 2000);
+    } else {
+      overrideResult.style.color = "red";
+      overrideResult.textContent = "Incorrect code!";
     }
-  </script>
-</body>
-</html>
+  }
+
+  function showBankHack() {
+    virusSection.style.display = "none";
+
+    const bankDiv = document.createElement("div");
+    bankDiv.id = "bankSection";
+    bankDiv.innerHTML = `
+      <h2>💳 Bank Access Terminal</h2>
+      <p>Enter bank account password:</p>
+      <input type="text" id="bankInput" maxlength="10"><br>
+      <button onclick="hackBank()">Hack Account</button>
+      <p id="bankResult"></p>
+    `;
+    document.body.appendChild(bankDiv);
+  }
+
+  function hackBank() {
+    const input = document.getElementById("bankInput").value;
+    const result = document.getElementById("bankResult");
+    if (input === "gold123") {
+      result.style.color = "#0f0";
+      result.textContent = "💸 Transfer complete! You stole $999,999!";
+    } else {
+      result.style.color = "red";
+      result.textContent = "❌ Access Denied.";
+    }
+  }
+</script>
