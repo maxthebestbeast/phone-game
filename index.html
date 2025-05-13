@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Phone & Zombie Apocalypse Game</title>
+  <title>Phone & Space Game</title>
   <style>
     body { margin: 0; background-color: #111; color: white; font-family: Arial, sans-serif; }
     h1 { text-align: center; font-family: Arial, sans-serif; }
@@ -13,11 +13,11 @@
     .pad button { padding: 20px; font-size: 24px; background-color: #444; color: white; border: none; cursor: pointer; }
     .pad button:hover { background-color: #666; }
     #backToEarthButton { display: none; margin-top: 20px; padding: 10px 20px; background-color: #444; color: white; cursor: pointer; border: none; }
-    .pad { display: grid; grid-template-columns: repeat(3, 100px); grid-gap: 10px; justify-content: center; }
+    #moonExitButton { display: none; margin-top: 20px; padding: 10px 20px; background-color: #444; color: white; cursor: pointer; border: none; }
   </style>
 </head>
 <body>
-  <h1>📱 Phone & Zombie Apocalypse Game</h1>
+  <h1>📱 Phone & Space Game</h1>
   <div id="gameMessage">Get ready to play!</div>
   <div id="pad" class="pad">
     <button id="1" onclick="pressNumber(1)">1</button>
@@ -33,12 +33,14 @@
   </div>
   <canvas id="gameCanvas" width="800" height="500"></canvas>
   <button id="backToEarthButton" onclick="goBackToEarth()">Go Back to Earth</button>
+  <button id="moonExitButton" onclick="moonExit()">Exit Ship (Moon)</button>
 
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
     const gameMessage = document.getElementById("gameMessage");
     const backToEarthButton = document.getElementById("backToEarthButton");
+    const moonExitButton = document.getElementById("moonExitButton");
 
     let gameStage = 0; // 0 - Phone Game, 1 - Zombie Game, 2 - Moon Game
     let phoneNumbersPressed = 0;
@@ -47,27 +49,6 @@
 
     // Phone Game Variables
     let level = 1;
-
-    // Zombie Game Variables
-    const player = {
-      x: 100,
-      y: canvas.height / 2,
-      width: 30,
-      height: 30,
-      speed: 5,
-      health: 100,
-      bullets: [],
-      gunAngle: 0,
-      gunLength: 30,
-    };
-
-    let zombies = [];
-    let zombieCount = 0;
-    let zombieSpawnRate = 1000;
-    let zombieHealthIncreaseInterval = 10000;
-
-    // Moon Game Variables
-    let onMoon = false;
 
     // Start Phone Game
     function startPhoneGame() {
@@ -94,8 +75,8 @@
     // Phone Game Loop
     function phoneGameLoop() {
       if (phoneNumbersPressed >= 15) {
-        gameMessage.textContent = "You won the phone game! Moving to Zombie Apocalypse...";
-        setTimeout(startZombieGame, 2000);
+        gameMessage.textContent = "You won the phone game! Moving to the Moon!";
+        setTimeout(startMoonGame, 2000);
         return;
       }
 
@@ -103,10 +84,53 @@
       gameMessage.textContent = `Press ${targetNumber}... (Level ${level})`;
     }
 
+    // Moon Game Variables
+    let onMoon = false;
+
+    // Start Moon Game
+    function startMoonGame() {
+      gameStage = 2;
+      gameMessage.textContent = "Moon: Fuel the ship and take off!";
+      backToEarthButton.style.display = "none";
+      moonExitButton.style.display = "block";
+    }
+
+    // Exit the ship on the Moon
+    function moonExit() {
+      gameMessage.textContent = "Moon exit successful! You’re now on Earth.";
+      backToEarthButton.style.display = "block";
+      moonExitButton.style.display = "none";
+    }
+
+    // Go back to Earth (Zombie game)
+    function goBackToEarth() {
+      gameStage = 1;
+      onMoon = false;
+      backToEarthButton.style.display = "none";
+      gameMessage.textContent = "Zombie Apocalypse: Survive!";
+      startZombieGame();
+    }
+
+    // Zombie Game Variables
+    const player = {
+      x: 100,
+      y: canvas.height / 2,
+      width: 30,
+      height: 30,
+      speed: 5,
+      health: 100,
+      bullets: [],
+      gunAngle: 0,
+      gunLength: 30,
+    };
+
+    let zombies = [];
+    let zombieCount = 0;
+    let zombieSpawnRate = 1000;
+    let zombieHealthIncreaseInterval = 10000;
+
     // Start Zombie Game
     function startZombieGame() {
-      gameStage = 1;
-      gameMessage.textContent = "Zombie Apocalypse: Survive!";
       setInterval(spawnZombie, zombieSpawnRate);
       setInterval(increaseZombieHealth, zombieHealthIncreaseInterval);
       gameLoop();
@@ -234,14 +258,6 @@
     document.addEventListener("keydown", (e) => {
       if (e.key === " " && gameRunning) shootBullet();
     });
-
-    // Go back to Earth (Zombie game)
-    function goBackToEarth() {
-      gameStage = 1;
-      onMoon = false;
-      backToEarthButton.style.display = "none";
-      startZombieGame();
-    }
 
     // Initialize the game
     startPhoneGame();
