@@ -9,24 +9,27 @@
     canvas { display: block; margin: auto; background: #222; }
     h1 { text-align: center; font-family: Arial, sans-serif; }
     #gameMessage { text-align: center; }
+    #backToEarthButton { display: none; margin-top: 10px; padding: 10px 20px; background-color: #444; color: white; cursor: pointer; border: none; }
   </style>
 </head>
 <body>
   <h1>📱 Phone & Zombie Apocalypse Game</h1>
   <canvas id="gameCanvas" width="800" height="500"></canvas>
   <p id="gameMessage"></p>
+  <button id="backToEarthButton" onclick="goBackToEarth()">Go Back to Earth</button>
 
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
+    const backToEarthButton = document.getElementById("backToEarthButton");
 
-    let gameStage = 0; // Game stages: 0 - Phone Game, 1 - Zombie Game
-
-    // Phone Game Variables
+    let gameStage = 0; // Game stages: 0 - Phone Game, 1 - Zombie Game, 2 - Moon Game
     let phoneNumbersPressed = 0;
-    let level = 1;
     let targetNumber;
     let gameRunning = true;
+
+    // Phone Game Variables
+    let level = 1;
 
     // Zombie Game Variables
     const player = {
@@ -45,6 +48,9 @@
     let zombieCount = 0;
     let zombieSpawnRate = 1000;
     let zombieHealthIncreaseInterval = 10000;
+
+    // Moon Game Variables (For navigation between Earth and Moon)
+    let onMoon = false;
 
     // Phone Game Logic
     function startPhoneGame() {
@@ -211,6 +217,21 @@
 
     // Start the game (Phone Game first)
     startPhoneGame();
+
+    // Go back to Earth (Zombie game)
+    function goBackToEarth() {
+      gameStage = 1;
+      onMoon = false;
+      backToEarthButton.style.display = "none";
+      startZombieGame();
+    }
+
+    // Trigger when Moon game is won
+    function moonGameWon() {
+      gameStage = 2;
+      document.getElementById("gameMessage").textContent = "You are on the moon!";
+      backToEarthButton.style.display = "block"; // Show button to return to Earth
+    }
 
   </script>
 </body>
