@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Disobey the Phone</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #222;
+      color: #fff;
+      padding: 20px;
+    }
+    #keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 80px);
+      grid-gap: 10px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .btn {
+      background: #444;
+      color: white;
+      font-size: 24px;
+      padding: 20px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .btn:hover {
+      background: #666;
+    }
+    #status {
+      font-size: 20px;
+      margin-top: 20px;
+    }
+    #sequence {
+      font-size: 18px;
+      margin-top: 10px;
+      color: #0f0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Disobey the Phone</h1>
+  <div id="instruction">Press Start to begin</div>
+  <button onclick="startGame()">Start</button>
+
+  <div id="keypad" style="display:none;"></div>
+  <div id="status"></div>
+  <div id="sequence"></div>
+
+  <script>
+    const keypad = document.getElementById("keypad");
+    const instruction = document.getElementById("instruction");
+    const status = document.getElementById("status");
+    const sequenceDisplay = document.getElementById("sequence");
+
+    let level = 1;
+    let correctAvoids = 0;
+    let toldNumber = null;
+    let inPuzzle = false;
+    let puzzleSequence = [];
+    let puzzleIndex = 0;
+
+    function startGame() {
+      level = 1;
+      correctAvoids = 0;
+      inPuzzle = false;
+      createKeypad();
+      keypad.style.display = "grid";
+      nextAvoidInstruction();
+    }
+
+    function createKeypad() {
+      keypad.innerHTML = "";
+      const nums = [1,2,3,4,5,6,7,8,9,0];
+      nums.forEach(n => {
+        const btn = document.createElement("button");
+        btn.className = "btn";
+        btn.textContent = n;
+        btn.onclick = () => handlePress(n);
+        keypad.appendChild(btn);
+      });
+    }
+
+    function nextAvoidInstruction() {
+      toldNumber = Math.floor(Math.random() * 10);
+      instruction.textContent = `Don't press: ${toldNumber}`;
+      status.textContent = `Avoided ${correctAvoids}/15`;
+    }
+
+    function handlePress(n) {
+      if (inPuzzle) {
+        if (n === puzzleSequence[puzzleIndex]) {
+          puzzleIndex++;
+          if (puzzleIndex === puzzleSequence.length) {
+            level++;
+            if (level > 4) {
+              instruction.textContent = "You Win!";
+              keypad.style.display = "none";
+            } else {
+              correctAvoids = 0;
+              inPuzzle = false;
+              sequenceDisplay.textContent = "";
+              nextAvoidInstruction();
+            }
+          }
+        } else {
+          instruction.textContent = "Wrong! Restarting level...";
+          setTimeout(() => {
+            startPuzzlePhase();
+          }, 1000);
+        }
+        return;
+      }
+
+      if (n === toldNumber) {
+        correctAvoids = 0;
+        instruction.textContent = "Oops! You did what it said!";
+      } else {
+        correctAvoids++;
+        if (correctAvoids >= 15) {
+          startPuzzlePhase();
+          return;
+        }
+      }
+      nextAvoidInstruction();
+    }
+
+    function startPuzzlePhase() {
+      inPuzzle = true;
+      puzzleSequence = [];
+      puzzleIndex = 0;
+      instruction.textContent = `Puzzle! Repeat this ${level + 4}-digit sequence`;
+      for (let i = 0; i < level + 4; i++) {
+        puzzleSequence.push(Math.floor(Math.random() * 10));
+      }
+      sequenceDisplay.textContent = "Sequence: " + puzzleSequence.join(" ");
+    }
+  </script>
+</body>
+</html>
