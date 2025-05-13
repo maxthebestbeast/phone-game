@@ -5,25 +5,42 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Phone & Zombie Apocalypse Game</title>
   <style>
-    body { margin: 0; background-color: #111; color: white; }
-    canvas { display: block; margin: auto; background: #222; }
+    body { margin: 0; background-color: #111; color: white; font-family: Arial, sans-serif; }
     h1 { text-align: center; font-family: Arial, sans-serif; }
-    #gameMessage { text-align: center; }
-    #backToEarthButton { display: none; margin-top: 10px; padding: 10px 20px; background-color: #444; color: white; cursor: pointer; border: none; }
+    canvas { display: block; margin: auto; background: #222; }
+    #gameMessage { text-align: center; margin-top: 10px; font-size: 20px; }
+    .pad { display: grid; grid-template-columns: repeat(3, 100px); grid-gap: 10px; justify-content: center; margin-top: 20px; }
+    .pad button { padding: 20px; font-size: 24px; background-color: #444; color: white; border: none; cursor: pointer; }
+    .pad button:hover { background-color: #666; }
+    #backToEarthButton { display: none; margin-top: 20px; padding: 10px 20px; background-color: #444; color: white; cursor: pointer; border: none; }
+    .pad { display: grid; grid-template-columns: repeat(3, 100px); grid-gap: 10px; justify-content: center; }
   </style>
 </head>
 <body>
   <h1>📱 Phone & Zombie Apocalypse Game</h1>
+  <div id="gameMessage">Get ready to play!</div>
+  <div id="pad" class="pad">
+    <button id="1" onclick="pressNumber(1)">1</button>
+    <button id="2" onclick="pressNumber(2)">2</button>
+    <button id="3" onclick="pressNumber(3)">3</button>
+    <button id="4" onclick="pressNumber(4)">4</button>
+    <button id="5" onclick="pressNumber(5)">5</button>
+    <button id="6" onclick="pressNumber(6)">6</button>
+    <button id="7" onclick="pressNumber(7)">7</button>
+    <button id="8" onclick="pressNumber(8)">8</button>
+    <button id="9" onclick="pressNumber(9)">9</button>
+    <button id="0" onclick="pressNumber(0)">0</button>
+  </div>
   <canvas id="gameCanvas" width="800" height="500"></canvas>
-  <p id="gameMessage"></p>
   <button id="backToEarthButton" onclick="goBackToEarth()">Go Back to Earth</button>
 
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
+    const gameMessage = document.getElementById("gameMessage");
     const backToEarthButton = document.getElementById("backToEarthButton");
 
-    let gameStage = 0; // Game stages: 0 - Phone Game, 1 - Zombie Game, 2 - Moon Game
+    let gameStage = 0; // 0 - Phone Game, 1 - Zombie Game, 2 - Moon Game
     let phoneNumbersPressed = 0;
     let targetNumber;
     let gameRunning = true;
@@ -49,47 +66,65 @@
     let zombieSpawnRate = 1000;
     let zombieHealthIncreaseInterval = 10000;
 
-    // Moon Game Variables (For navigation between Earth and Moon)
+    // Moon Game Variables
     let onMoon = false;
 
-    // Phone Game Logic
+    // Start Phone Game
     function startPhoneGame() {
-      document.getElementById("gameMessage").textContent = "Phone Game: Don't press the number it says!";
+      gameStage = 0;
       phoneNumbersPressed = 0;
       targetNumber = Math.floor(Math.random() * 10);
+      gameMessage.textContent = "Phone Game: Press the number you see!";
       phoneGameLoop();
     }
 
+    // Handle phone number button press
+    function pressNumber(num) {
+      if (gameRunning) {
+        if (num === targetNumber) {
+          phoneNumbersPressed++;
+        } else {
+          gameMessage.textContent = "Wrong number! Game over!";
+          gameRunning = false;
+          setTimeout(startPhoneGame, 2000);
+        }
+      }
+    }
+
+    // Phone Game Loop
     function phoneGameLoop() {
       if (phoneNumbersPressed >= 15) {
-        document.getElementById("gameMessage").textContent = "You won the phone game! Get ready for the next part.";
+        gameMessage.textContent = "You won the phone game! Moving to Zombie Apocalypse...";
         setTimeout(startZombieGame, 2000);
         return;
       }
 
       targetNumber = Math.floor(Math.random() * 10);
-      document.getElementById("gameMessage").textContent = `Press ${targetNumber}... (Level ${level})`;
-
-      canvas.addEventListener("click", (e) => {
-        if (gameRunning && !e.target.contains(e)) {
-          if (targetNumber === e.clientX % 10) { // Simple check if clicked on right number area
-            phoneNumbersPressed++;
-          } else {
-            document.getElementById("gameMessage").textContent = "Wrong number! Game over!";
-            gameRunning = false;
-            setTimeout(startPhoneGame, 2000);
-          }
-        }
-      });
+      gameMessage.textContent = `Press ${targetNumber}... (Level ${level})`;
     }
 
-    // Zombie Game Logic
+    // Start Zombie Game
     function startZombieGame() {
       gameStage = 1;
-      document.getElementById("gameMessage").textContent = "Zombie Apocalypse Shooter: Survive!";
+      gameMessage.textContent = "Zombie Apocalypse: Survive!";
       setInterval(spawnZombie, zombieSpawnRate);
       setInterval(increaseZombieHealth, zombieHealthIncreaseInterval);
       gameLoop();
+    }
+
+    // Spawn a new zombie
+    function spawnZombie() {
+      const edge = Math.floor(Math.random() * 4);
+      let x = edge === 0 ? canvas.width : edge === 1 ? 0 : Math.random() * canvas.width;
+      let y = edge === 2 ? 0 : edge === 3 ? canvas.height : Math.random() * canvas.height;
+      zombies.push({ x, y, size: 20, health: 3 });
+    }
+
+    // Increase zombie health over time
+    function increaseZombieHealth() {
+      zombies.forEach(z => {
+        if (z.health < 10) z.health += 1;
+      });
     }
 
     // Player shooting logic
@@ -105,7 +140,7 @@
       player.bullets.push(bullet);
     }
 
-    // Player movement controls
+    // Move player using arrow keys
     function movePlayer() {
       if (keys["ArrowUp"] && player.y > 0) player.y -= player.speed;
       if (keys["ArrowDown"] && player.y < canvas.height - player.height) player.y += player.speed;
@@ -113,7 +148,7 @@
       if (keys["ArrowRight"] && player.x < canvas.width - player.width) player.x += player.speed;
     }
 
-    // Move zombies and check if they collide with player
+    // Update zombies and check for collisions
     function updateZombies() {
       zombies.forEach(z => {
         const dx = player.x - z.x;
@@ -143,7 +178,7 @@
       });
     }
 
-    // Draw everything to canvas
+    // Draw game objects
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -175,10 +210,10 @@
         ctx.fill();
       });
 
-      // Check if player is dead
+      // Check for player death
       if (player.health <= 0) {
         gameRunning = false;
-        document.getElementById("gameMessage").textContent = "You were overrun by zombies! Game Over!";
+        gameMessage.textContent = "You were overrun by zombies! Game Over!";
       }
     }
 
@@ -192,31 +227,13 @@
       }
     }
 
-    // Spawn a new zombie at random position
-    function spawnZombie() {
-      const edge = Math.floor(Math.random() * 4);
-      let x = edge === 0 ? canvas.width : edge === 1 ? 0 : Math.random() * canvas.width;
-      let y = edge === 2 ? 0 : edge === 3 ? canvas.height : Math.random() * canvas.height;
-      zombies.push({ x, y, size: 20, health: 3 });
-    }
-
-    // Increase zombie health
-    function increaseZombieHealth() {
-      zombies.forEach(z => {
-        if (z.health < 10) z.health += 1;
-      });
-    }
-
-    // Handle keypresses
+    // Handle key presses
     let keys = {};
     document.addEventListener("keydown", (e) => keys[e.key] = true);
     document.addEventListener("keyup", (e) => keys[e.key] = false);
     document.addEventListener("keydown", (e) => {
       if (e.key === " " && gameRunning) shootBullet();
     });
-
-    // Start the game (Phone Game first)
-    startPhoneGame();
 
     // Go back to Earth (Zombie game)
     function goBackToEarth() {
@@ -226,13 +243,8 @@
       startZombieGame();
     }
 
-    // Trigger when Moon game is won
-    function moonGameWon() {
-      gameStage = 2;
-      document.getElementById("gameMessage").textContent = "You are on the moon!";
-      backToEarthButton.style.display = "block"; // Show button to return to Earth
-    }
-
+    // Initialize the game
+    startPhoneGame();
   </script>
 </body>
 </html>
